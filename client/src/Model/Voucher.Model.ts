@@ -9,7 +9,7 @@ export interface IVoucher {
   id: string;
   voucherType?: string;
   voucherDate?: string;
-  voucherNumber?: string;
+  voucherNumber?: number;
   voucherData: IVoucherData[];
 }
 

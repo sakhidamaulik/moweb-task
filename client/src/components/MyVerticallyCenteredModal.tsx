@@ -28,6 +28,7 @@ let valid = function (current: any) {
 };
 
 const MyVerticallyCenteredModal = (props: any) => {
+  const [voucherNumber, setVoucherNumber] = useState(0);
   const [voucherType, setVoucherType] = useState(voucherOptions);
   const [voucherData, setvoucherData] = useState([
     { accountName: '', debit: 0, credit: 0, narration: '' }
@@ -51,6 +52,10 @@ const MyVerticallyCenteredModal = (props: any) => {
 
   const handleInputChange = (e: any) => {
     setVoucherType(e.value)
+  }
+
+  const handleVoucherNumberChange = (e: any) => {
+    setVoucherNumber(e.target.value)
   }
 
   const handleAddFields = () => {
@@ -79,11 +84,12 @@ const MyVerticallyCenteredModal = (props: any) => {
 
     const voucherObject: IVoucher = {
       id: uuid(),
+      voucherNumber: voucherNumber,
       voucherData: voucherData
     }
 
     dispatch(VoucherActions.CreateVoucher(voucherObject));
-  }, [dispatch, voucherData])
+  }, [dispatch, voucherData, voucherNumber])
 
   return (
     <Modal
@@ -119,7 +125,15 @@ const MyVerticallyCenteredModal = (props: any) => {
           </div>
           <div className="col-md-3 mb-3">
             <label htmlFor="voucherNumber">Voucher Number</label>
-            <input type="text" className="form-control" name="voucherNumber" id="voucherNumber" placeholder="Type here" />
+            <input
+              type="text"
+              className="form-control"
+              name="voucherNumber"
+              id="voucherNumber"
+              placeholder="Type here"
+              value={voucherNumber}
+              onChange={handleVoucherNumberChange}
+            />
           </div>
         </div>
         <Form>
