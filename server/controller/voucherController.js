@@ -5,7 +5,7 @@ exports.postVoucher = async (req, res, next) => {
 
   const voucherData = new Voucher({
     voucherType: req.body.voucherType,
-    voucherDate: req.body.voucherdate,
+    voucherDate: req.body.voucherDate,
     voucherNumber: req.body.voucherNumber,
     voucherData: req.body.voucherData,
   });
