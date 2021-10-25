@@ -1,35 +1,43 @@
 import React, { useCallback, useState } from 'react';
 import { Form, Button, Modal, Row, Col } from 'react-bootstrap';
-import Select from 'react-select';
+import Select, { SingleValue } from 'react-select';
 import Datetime from 'react-datetime';
 import { v4 as uuid } from "uuid";
-// import moment from 'moment';
+import moment from 'moment';
 import "react-datetime/css/react-datetime.css";
 import { IVoucher } from '../Model/Voucher.Model';
 import { VoucherActions } from '../redux/Voucher.Action';
 import { useDispatch } from 'react-redux';
 
-type VoucherOptions = {
+type VoucherOption = {
   value: string
   label: string
 }
 
-const voucherOptions: VoucherOptions[] = [
+const voucherOptions: VoucherOption[] = [
   { value: 'payment', label: 'Payment' },
   { value: 'sales', label: 'Sales' },
   { value: 'creditNote', label: 'Credit Note' },
   { value: 'journal', label: 'Journal' },
 ];
 
-let currentdate = new Date();
-let last4months = new Date(currentdate.setMonth(currentdate.getMonth() - 4));
-let valid = function (current: any) {
-  return current.isAfter(last4months);
-};
+// const getDaysInMonth = (year: any, month: any) => new Date(year, month, 0).getDate()
+
+// const addMonths = (input: any, months: any) => {
+//   const date = new Date(input)
+//   date.setDate(1)
+//   date.setMonth(date.getMonth() + months)
+//   date.setDate(Math.min(input.getDate(), getDaysInMonth(date.getFullYear(), date.getMonth() + 1)))
+//   return date
+// }
+
+// const fourMonths = addMonths(new Date(), -4); // four months before now
+// console.log(fourMonths);
 
 const MyVerticallyCenteredModal = (props: any) => {
+  const [selectedVoucherDate, setSelectedVoucherDate] = useState<string>();
   const [voucherNumber, setVoucherNumber] = useState(0);
-  const [voucherType, setVoucherType] = useState(voucherOptions);
+  const [selectedVoucherOption, setSelectedVoucherOption] = useState(voucherOptions[0]);
   const [voucherData, setvoucherData] = useState([
     { accountName: '', debit: 0, credit: 0, narration: '' }
   ]);
@@ -50,9 +58,9 @@ const MyVerticallyCenteredModal = (props: any) => {
     setvoucherData(values)
   }
 
-  const handleInputChange = (e: any) => {
-    setVoucherType(e.value)
-  }
+  const handleVoucherOptionChange = useCallback((newValue: SingleValue<VoucherOption>) => {
+    setSelectedVoucherOption(newValue as VoucherOption)
+  }, [setSelectedVoucherOption]);
 
   const handleVoucherNumberChange = (e: any) => {
     setVoucherNumber(e.target.value)
@@ -75,6 +83,16 @@ const MyVerticallyCenteredModal = (props: any) => {
   //   alert(JSON.stringify(voucherData, null, 2))
   // }
 
+  const disablePastFourMonthsDate = useCallback((currentDate: moment.Moment) => {
+    const startOfFourMonthsAgo = moment().subtract(4, 'month');
+    const startOfToday = moment().subtract(1, 'day').startOf('day');
+    return currentDate.isBefore(startOfFourMonthsAgo) || currentDate.isAfter(startOfToday);
+  }, []);
+
+  const handleDateTimeChange = useCallback((value: string | moment.Moment) => {
+    setSelectedVoucherDate((value as moment.Moment).toISOString());
+  }, []);
+
   const handleSubmit = useCallback((e: any) => {
     let newVoucherdata = voucherData;
     if (!newVoucherdata) {
@@ -84,12 +102,14 @@ const MyVerticallyCenteredModal = (props: any) => {
 
     const voucherObject: IVoucher = {
       id: uuid(),
-      voucherNumber: voucherNumber,
-      voucherData: voucherData
+      voucherType: selectedVoucherOption.label,
+      voucherDate: selectedVoucherDate,
+      voucherNumber,
+      voucherData,
     }
 
     dispatch(VoucherActions.CreateVoucher(voucherObject));
-  }, [dispatch, voucherData, voucherNumber])
+  }, [voucherData, selectedVoucherOption.label, selectedVoucherDate, voucherNumber, dispatch])
 
   return (
     <Modal
@@ -112,15 +132,16 @@ const MyVerticallyCenteredModal = (props: any) => {
               classNamePrefix="select"
               isSearchable
               name="voucherType"
-              options={voucherType}
+              options={voucherOptions}
               defaultValue={voucherOptions[0]}
-              onChange={handleInputChange}
+              onChange={handleVoucherOptionChange}
             />
           </div>
           <div className="col-md-4 mb-3">
             <label htmlFor="voucherDate">Vocuher Date</label>
             <Datetime
-              isValidDate={valid}
+              isValidDate={disablePastFourMonthsDate}
+              onChange={handleDateTimeChange}
             />
           </div>
           <div className="col-md-3 mb-3">
@@ -195,4 +216,3 @@ const MyVerticallyCenteredModal = (props: any) => {
 }
 
 export default MyVerticallyCenteredModal;
-
